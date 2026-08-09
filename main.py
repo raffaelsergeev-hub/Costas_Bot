@@ -43,7 +43,7 @@ def main_menu() -> ReplyKeyboardMarkup:
             [KeyboardButton(text="Конференц-зал")]
         ],
         resize_keyboard=True,
-        input_field_placeholder="Выберете пункт из меню"
+        input_field_placeholder="Выберите пункт из меню"
 
     )
 
@@ -169,7 +169,7 @@ def text_rooms_deluxe() -> str:
         "• Вид на тихий внутренний двор\n"
         "• Телевизор, кондиционер, сейф, мини-бар, чайная станция\n"
         "• Ванная или душ, бесплатный WI-FI\n"
-        "• Возможны вариации номера с понорамным видом и эркером\n"
+        "• Возможны вариации номера с панорамным видом и эркером\n"
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
 def text_rooms_superior() -> str:
@@ -181,7 +181,7 @@ def text_rooms_superior() -> str:
         "• Панорамный вид на исторический центр города\n"
         "• Телевизор с плоским экраном, кондиционер, душ\n"
         "• Сейф, мини-бар, чайная станция, бесплатный WI-FI\n"
-        "• Возможны вариации номера с понорамным видом и эркером\n"
+        "• Возможны вариации номера с панорамным видом и эркером\n"
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
 def text_rooms_suite() -> str:
@@ -193,7 +193,7 @@ def text_rooms_suite() -> str:
         "• Вид на тихий зеленый внутренний двор\n"
         "• Кофемашина, чайная станция, мини-бар, сейф, кондиционер\n"
         "• Ванная и душ, телевизор с плоским экраном, бесплатный WI-FI\n"
-        "• Возможны вариации номера с понорамным видом и эркером\n"
+        "• Возможны вариации номера с панорамным видом и эркером\n"
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
 
@@ -378,7 +378,7 @@ async def process_dates(message: Message, state: FSMContext):
     await state.clear()
 
 @dp.message()
-async def echo_answwer(message: types.Message):
+async def echo_answer(message: types.Message):
     await message.answer(text='Простите, но я не понимаю, что вы хотите\nВернемся к началу? /start')
 @dp.errors()
 async def global_error_handler(event: types.ErrorEvent):
