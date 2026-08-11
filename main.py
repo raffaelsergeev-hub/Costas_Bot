@@ -294,19 +294,19 @@ async def show_conference(message: types.Message):
     await message.answer(text_confrerence_room(), reply_markup=main_menu())
 
 
-# бронирвание
+# 1. СТАРТ ИЗ ИНЛАЙН КНОПКИ
 @dp.callback_query(F.data == "start_booking_fsm")
 async def process_inline_booking(callback: CallbackQuery, state: FSMContext):
     await callback.answer()  # Убираем часики
     await state.clear()  # Очищаем старые состояния
-    # Отправляем сообщение гостю
     if isinstance(callback.message, Message):
         await callback.message.answer("Отлично! Давайте оформим заявку. Введите ваше ФИО:")
-
     await state.set_state(BookingForm.name)
+
+# 2. СТАРТ ИЗ ТЕКСТОВОГО МЕНЮ ИЛИ КОМАНДЫ
 @dp.message(or_f(Command('booking'), F.text == "Заявка на бронирование"))
 async def start_booking(message: Message, state: FSMContext):
-    await state.clear() #Очистка состояния
+    await state.clear()  # Очистка состояния
     await message.answer("Отлично! Давайте оформим заявку. Введите ваше ФИО:")
     await state.set_state(BookingForm.name)
 
@@ -314,16 +314,13 @@ async def start_booking(message: Message, state: FSMContext):
 @dp.message(BookingForm.name)
 async def process_name(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
-
     # Отправляем инлайн-кнопки для выбора категории
     await message.answer("Выберите категорию номера:", reply_markup=booking_bottoms())
     await state.set_state(BookingForm.category)
 
-
 # 4. ЛОВИМ КАТЕГОРИЮ (ЧЕРЕЗ CALLBACK) -> ПЕРЕХОД К ТЕЛЕФОНУ
 @dp.callback_query(BookingForm.category, F.data.startswith("cat_"))
 async def process_category(callback: CallbackQuery, state: FSMContext):
-    # Превращаем callback_data в красивое название
     categories = {
         "cat_standard": "Стандарт",
         "cat_deluxe": "Делюкс",
@@ -331,37 +328,34 @@ async def process_category(callback: CallbackQuery, state: FSMContext):
     }
     chosen_cat = categories.get(callback.data or "cat_standard", "Не указана")
     await state.update_data(category=chosen_cat)
-
-    # Убираем часики на кнопке в ТГ и пишем текст
     await callback.answer()
     await callback.message.answer(f"Выбрано: {chosen_cat}\n\nТеперь введите ваш номер телефона:")
     await state.set_state(BookingForm.phone)
 
-
-# 5. ЛОВИМ ТЕЛЕФОН -> ПЕРЕХОДe
+# 5. ЛОВИМ ТЕЛЕФОН -> ПЕРЕХОД К ДАТАМ
 @dp.message(BookingForm.phone)
 async def process_phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.text)
-
     await message.answer("Укажите желаемые даты заезда и выезда (например, 12.10 - 15.10):")
     await state.set_state(BookingForm.dates)
 
-@dp.message(BookingForm.phone)
-async def process_other(message: Message, state: FSMContext):
-    await state.update_data(other=message.text)
-
-    await message.answer("Прошу, укажите дополнительную информацию, если необхадимо")
-    await state.set_state(BookingForm.other)
-# 6. ФИНАЛ: ЛОВИМ ДАТЫ -> ОТПРАВКА АДМИНАМ -> СБРОС
-@dp.message(BookingForm.other)
+# 6. ЛОВИМ ДАТЫ -> ПЕРЕХОД К ПРИМЕЧАНИЯМ (OTHER)
+@dp.message(BookingForm.dates)
 async def process_dates(message: Message, state: FSMContext):
+    await state.update_data(dates=message.text)
+    await message.answer("Прошу, укажите дополнительную информацию, если необходимо (или напишите 'нет'):")
+    await state.set_state(BookingForm.other)
+
+# 7. ФИНАЛ: ЛОВИМ ДОП. ИНФОРМАЦИЮ -> ОТПРАВКА АДМИНАМ -> СБРОС FSM
+@dp.message(BookingForm.other)
+async def process_other_and_finish(message: Message, state: FSMContext):
     await state.update_data(other=message.text)
 
     # Вытаскиваем всё, что насобирали
     user_data = await state.get_data()
     username = f"@{message.from_user.username}" if message.from_user.username else "Скрыт"
 
-    # Формируем портянку для админов
+    # Формируем портянку для админов (Маркировку оставил как ты просил)
     admin_text = (
         f"🔔 **НОВАЯ ЗАЯВКА НА БРОНИРОВАНИЕ**\n\n"
         f"👤 **ФИО:** {user_data.get('name')}\n"
@@ -369,9 +363,10 @@ async def process_dates(message: Message, state: FSMContext):
         f"📞 **Телефон:** {user_data.get('phone')}\n"
         f"📅 **Даты:** {user_data.get('dates')}\n"
         f"🆔 **Telegram ID:** `{message.from_user.id}`\n"
-        f"🔗 **Ссылка:** {username}"
-        f"Примечания: {user_data.get('other')}"
+        f"🔗 **Ссылка:** {username}\n"
+        f"📝 **Примечания:** {user_data.get('other')}"
     )
+
     # Пытаемся заслать админам
     try:
         await message.bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_text, parse_mode="Markdown")
