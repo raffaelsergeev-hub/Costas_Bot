@@ -29,6 +29,7 @@ class BookingForm(StatesGroup):
     category = State()   # Шаг: категория
     phone = State()      # Шаг 2: Ожидание телефона
     dates = State()      # Шаг 3: Ожидание дат заезда
+    other = State()
 
 #клавиатура
 def main_menu() -> ReplyKeyboardMarkup:
@@ -345,11 +346,16 @@ async def process_phone(message: Message, state: FSMContext):
     await message.answer("Укажите желаемые даты заезда и выезда (например, 12.10 - 15.10):")
     await state.set_state(BookingForm.dates)
 
+@dp.message(BookingForm.phone)
+async def process_other(message: Message, state: FSMContext):
+    await state.update_data(other=message.text)
 
+    await message.answer("Прошу, укажите дополнительную информацию, если необхадимо")
+    await state.set_state(BookingForm.other)
 # 6. ФИНАЛ: ЛОВИМ ДАТЫ -> ОТПРАВКА АДМИНАМ -> СБРОС
-@dp.message(BookingForm.dates)
+@dp.message(BookingForm.other)
 async def process_dates(message: Message, state: FSMContext):
-    await state.update_data(dates=message.text)
+    await state.update_data(other=message.text)
 
     # Вытаскиваем всё, что насобирали
     user_data = await state.get_data()
@@ -364,6 +370,7 @@ async def process_dates(message: Message, state: FSMContext):
         f"📅 **Даты:** {user_data.get('dates')}\n"
         f"🆔 **Telegram ID:** `{message.from_user.id}`\n"
         f"🔗 **Ссылка:** {username}"
+        f"Примечания: {user_data.get('other')}"
     )
     # Пытаемся заслать админам
     try:
