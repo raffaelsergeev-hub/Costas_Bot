@@ -10,13 +10,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command, or_f
 
-
 load_dotenv()
 TOKEN = os.getenv('BOT_TOKEN')
-ADMIN_CHAT_ID = 8879100916
+ADMIN_CHAT_ID = 7940715245
 router = Router()
 
-if not TOKEN: # check TOKEN
+if not TOKEN:  # check TOKEN
     raise ValueError("Нету Токена")
 
 bot = Bot(token=TOKEN,
@@ -24,14 +23,16 @@ bot = Bot(token=TOKEN,
           )
 dp = Dispatcher()
 
+
 class BookingForm(StatesGroup):
-    name = State()       # Шаг 1: Ожидание имени
-    category = State()   # Шаг: категория
-    phone = State()      # Шаг 2: Ожидание телефона
-    dates = State()      # Шаг 3: Ожидание дат заезда
+    name = State()  # Шаг 1: Ожидание имени
+    category = State()  # Шаг: категория
+    phone = State()  # Шаг 2: Ожидание телефона
+    dates = State()  # Шаг 3: Ожидание дат заезда
     other = State()
 
-#клавиатура
+
+# клавиатура
 def main_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
@@ -48,14 +49,15 @@ def main_menu() -> ReplyKeyboardMarkup:
 
     )
 
+
 def booking_bottoms() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-        [InlineKeyboardButton(text="Стандарт", callback_data="cat_standard")],
-        [InlineKeyboardButton(text="Делюкс", callback_data="cat_deluxe")],
-        [InlineKeyboardButton(text="Люкс", callback_data="cat_suite")],
-        [InlineKeyboardButton(text="🔴 Оставить заявку на бронь", callback_data="start_booking_fsm")]
-    ]
+            [InlineKeyboardButton(text="Супериор панорамный (22 м²)", callback_data="cat_standard")],
+            [InlineKeyboardButton(text="Делюкс (30 м²)", callback_data="cat_deluxe")],
+            [InlineKeyboardButton(text="Люкс Классический (50 м²)", callback_data="cat_suite")],
+
+        ]
     )
 
 
@@ -64,9 +66,12 @@ def rooms_menu() -> InlineKeyboardMarkup:
         inline_keyboard=[
             [InlineKeyboardButton(text="Делюкс (30 м²)", callback_data="room_deluxe")],
             [InlineKeyboardButton(text="Супериор панорамный (22 м²)", callback_data="room_superior")],
-            [InlineKeyboardButton(text="Люкс Классический (50 м²)", callback_data="room_suite")]
+            [InlineKeyboardButton(text="Люкс Классический (50 м²)", callback_data="room_suite")],
+            [InlineKeyboardButton(text="🔴 Оставить заявку на бронь", callback_data="start_booking_fsm")]
         ]
     )
+
+
 def faq_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -75,17 +80,23 @@ def faq_menu() -> InlineKeyboardMarkup:
             [InlineKeyboardButton(text="🚗 Есть ли парковка?", callback_data="faq_parking")]
         ]
     )
+
+
 def back_menu() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Назад", callback_data="back")],
         ]
     )
+
+
 # сообщения
 def text_home() -> str:
     return (
         "Добрый день! Буду рад помочь вам.\nПрошу вас, выберете пункт из меню:"
     )
+
+
 def text_hotel() -> str:
     return (
         "<b>Отель КОСТАС 4★</b> — новый отель в центре Санкт-Петербурга, "
@@ -95,8 +106,12 @@ def text_hotel() -> str:
         "• Собственная подземная парковка, лобби-бар, фитнес-центр и прачечная.\n"
         "• Искренний сервис и гостеприимная атмосфера для каждого гостя!"
     )
+
+
 def text_rooms_start() -> str:
     return ("Выберите интересующую вас категорию номера из списка ниже:")
+
+
 def text_contacts() -> str:
     return (
         "📍 <b>Адрес:</b>\n191167, Санкт-Петербург, ул. Профессора... Ивашенцова, 2А\n\n"
@@ -106,17 +121,23 @@ def text_contacts() -> str:
         "• Мероприятия: +7 (812) 710-24-22, +7 (921) 090-78-02\n\n"
         "💬 Доступна связь через Max, Telegram по указанным мобильным номерам!"
     )
+
+
 def text_faq_start():
     return 'Часто задаваемые вопросы. Выберите интересующую тему:'
+
+
 def text_faq_time():
-    return(
+    return (
         "⏰ <b>Время заезда и выезда:</b>\n\n"
         "• Заезд в отель начинается с <b>14:00</b>.\n"
         "• Выезд из номеров осуществляется до <b>12:00</b>.\n\n"
         "Возможность раннего заезда или позднего выезда уточняйте у администратора."
     )
+
+
 def text_faq_breakfast():
-    return(
+    return (
         "🍽️ **Завтраки и Лобби-бар в отеле KOSTAS 4***\n\n"
         "🍳 **Завтраки «шведский стол»**\n"
         "Проходят ежедневно в ресторане отеля. В меню: мясные и рыбные деликатесы, сыры, "
@@ -131,15 +152,19 @@ def text_faq_breakfast():
         "• Атмосфера сдержанной роскоши, авторские коктейли, винная карта, согревающие напитки "
         "и полноценное меню европейской и средиземноморской кухни для позднего ужина или деловой встречи."
     )
+
+
 def text_faq_parking():
-    return(
+    return (
         "🚗 <b>Парковка:</b>\n\n"
         "Да, у отеля есть <b>собственная подземная парковка</b>.\n"
         "Вы можете оставить свой автомобиль в безопасности на время проживания.\n"
         "(Стоимость и наличие мест уточняйте у администратора /contacts)"
     )
+
+
 def text_confrerence_room() -> str:
-    return(
+    return (
         "🏢 **Конференц-пространства отеля KOSTAS 4***\n\n"
         "К вашим услугам 4 современные площадки (всего более 300 кв. м):\n"
         "• **Большой зал** (200 кв. м) — до 200 участников для масштабных событий.\n"
@@ -151,8 +176,10 @@ def text_confrerence_room() -> str:
         "Меню лобби-бара:https://kostashotel.ru/restaurant/bar-2/"
 
     )
+
+
 def text_help():
-    return(
+    return (
         "❓ <b>Справка по командам отель-бота:</b>\n\n"
         "• /start или кнопка <b>Меню</b> — вернуться в главное меню\n"
         "• /hotel — узнать подробнее об отеле КОСТАС 4★\n"
@@ -160,9 +187,11 @@ def text_help():
         "• /help — вызвать это меню помощи\n\n"
         "💡 Для удобства перемещения пользуйтесь кнопками на экране."
     )
+
+
 # о номерах
 def text_rooms_deluxe() -> str:
-    return(
+    return (
         "🛏 <b>Категория: Делюкс</b>\n"
         "📐 <b>Площадь:</b> 30 м²\n"
         "👥 <b>Размещение:</b> 2-х местный\n\n"
@@ -173,8 +202,10 @@ def text_rooms_deluxe() -> str:
         "• Возможны вариации номера с панорамным видом и эркером\n"
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
+
+
 def text_rooms_superior() -> str:
-    return(
+    return (
         "🛏 <b>Категория: Супериор панорамный вид на город</b>\n"
         "📐 <b>Площадь:</b> 22 м²\n"
         "👥 <b>Размещение:</b> 2-х местный\n\n"
@@ -185,8 +216,10 @@ def text_rooms_superior() -> str:
         "• Возможны вариации номера с панорамным видом и эркером\n"
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
+
+
 def text_rooms_suite() -> str:
-    return(
+    return (
         "🛏 <b>Категория: Двухкомнатный Люкс Классический</b>\n"
         "📐 <b>Площадь:</b> 50 м²\n"
         "👥 <b>Размещение:</b> до 4-х человек\n\n"
@@ -198,16 +231,19 @@ def text_rooms_suite() -> str:
         "• (Наличие проверяйте на сайте или у администратора /contacts)"
     )
 
+
 # команды
 @dp.message(Command('start'))
 @dp.message(F.text == 'Меню')
 async def start(message: types.Message):
     await message.answer(text_home(), reply_markup=main_menu())
 
+
 @dp.message(Command('hotel'))
 @dp.message(F.text == "Об отеле")
 async def hotel(message: types.Message):
     await message.answer(text_hotel(), reply_markup=main_menu())
+
 
 @dp.message(Command('contacts'))
 @dp.message(F.text == "Контакты")
@@ -218,13 +254,16 @@ async def contacts(message: types.Message):
         first_name='Reception',
     )
 
+
 @dp.message(Command('rooms_start'))
 @dp.message(F.text == "Номера")
 async def show_rooms(message: types.Message):
     await message.answer(text_rooms_start(), reply_markup=rooms_menu())
+
+
 # deluxe
 @dp.callback_query(F.data == "room_deluxe")
-async def process_room_deluxe(callback:types.CallbackQuery):
+async def process_room_deluxe(callback: types.CallbackQuery):
     await callback.message.delete()
     photo_url = "https://kostashotel.ru/wp-content/uploads/2022/05/a-9151.jpg"
     await callback.message.answer_photo(
@@ -234,9 +273,10 @@ async def process_room_deluxe(callback:types.CallbackQuery):
     )
     await callback.answer()
 
+
 # superior
 @dp.callback_query(F.data == "room_superior")
-async def process_room_superior(callback:types.CallbackQuery):
+async def process_room_superior(callback: types.CallbackQuery):
     await callback.message.delete()
     photo_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR98TJrhUKjf1_Y3oemM_8pVFbiA7nnDL9nnPm0lHzCIQ&s=10"
     await callback.message.answer_photo(
@@ -245,9 +285,10 @@ async def process_room_superior(callback:types.CallbackQuery):
         reply_markup=back_menu())
     await callback.answer()
 
-#suit
+
+# suit
 @dp.callback_query(F.data == "room_suite")
-async def process_room_suite(callback:types.CallbackQuery):
+async def process_room_suite(callback: types.CallbackQuery):
     await callback.message.delete()
     photo_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmY7TQzqIUjloKT1k4RniKZ2iP2_vLO0ZWjbEYNmfdLMV2Nur1gVoMYJI&s=10"
     await callback.message.answer_photo(
@@ -255,39 +296,51 @@ async def process_room_suite(callback:types.CallbackQuery):
         caption=text_rooms_suite(),
         reply_markup=back_menu())
     await callback.answer()
-#в меню номеров
+
+
+# в меню номеров
 @dp.callback_query(F.data == "back")
-async def process_back(callback:types.CallbackQuery):
+async def process_back(callback: types.CallbackQuery):
     await callback.message.delete()
     await callback.message.answer(text_rooms_start(), reply_markup=rooms_menu())
     await callback.answer()
+
+
 # частые вопросы
 @dp.message(Command('faq'))
 @dp.message(F.text == "Частые вопросы")
 async def show_faq(message: types.Message):
     await message.answer(text_faq_start(), reply_markup=faq_menu())
 
-#check in time and check out time
+
+# check in time and check out time
 @dp.callback_query(F.data == "faq_time")
-async def process_faq_time(callback:types.CallbackQuery):
+async def process_faq_time(callback: types.CallbackQuery):
     await callback.message.answer(text_faq_time())
     await callback.answer()
-#new info
-#breakfast
+
+
+# new info
+# breakfast
 @dp.callback_query(F.data == "faq_breakfast")
-async def process_faq_breakfast(callback:types.CallbackQuery):
+async def process_faq_breakfast(callback: types.CallbackQuery):
     await callback.message.answer(text_faq_breakfast())
     await callback.answer()
 
-#parking
+
+# parking
 @dp.callback_query(F.data == "faq_parking")
-async def process_faq_parking(callback:types.CallbackQuery):
+async def process_faq_parking(callback: types.CallbackQuery):
     await callback.message.answer(text_faq_parking())
     await callback.answer()
+
+
 @dp.message(Command('help'))
 @dp.message(F.text == 'Помощь')
 async def show_help(message: types.Message):
     await message.answer(text_help(), reply_markup=main_menu())
+
+
 @dp.message(Command('conference'))
 @dp.message(F.text == 'Конференц-зал')
 async def show_conference(message: types.Message):
@@ -303,12 +356,14 @@ async def process_inline_booking(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer("Отлично! Давайте оформим заявку. Введите ваше ФИО:")
     await state.set_state(BookingForm.name)
 
+
 # 2. СТАРТ ИЗ ТЕКСТОВОГО МЕНЮ ИЛИ КОМАНДЫ
 @dp.message(or_f(Command('booking'), F.text == "Заявка на бронирование"))
 async def start_booking(message: Message, state: FSMContext):
     await state.clear()  # Очистка состояния
     await message.answer("Отлично! Давайте оформим заявку. Введите ваше ФИО:")
     await state.set_state(BookingForm.name)
+
 
 # 3. ЛОВИМ ФИО -> ПЕРЕХОД К КАТЕГОРИИ
 @dp.message(BookingForm.name)
@@ -318,11 +373,12 @@ async def process_name(message: Message, state: FSMContext):
     await message.answer("Выберите категорию номера:", reply_markup=booking_bottoms())
     await state.set_state(BookingForm.category)
 
+
 # 4. ЛОВИМ КАТЕГОРИЮ (ЧЕРЕЗ CALLBACK) -> ПЕРЕХОД К ТЕЛЕФОНУ
 @dp.callback_query(BookingForm.category, F.data.startswith("cat_"))
 async def process_category(callback: CallbackQuery, state: FSMContext):
     categories = {
-        "cat_standard": "Стандарт",
+        "cat_standard": "Супериор",
         "cat_deluxe": "Делюкс",
         "cat_suite": "Люкс"
     }
@@ -332,6 +388,7 @@ async def process_category(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(f"Выбрано: {chosen_cat}\n\nТеперь введите ваш номер телефона:")
     await state.set_state(BookingForm.phone)
 
+
 # 5. ЛОВИМ ТЕЛЕФОН -> ПЕРЕХОД К ДАТАМ
 @dp.message(BookingForm.phone)
 async def process_phone(message: Message, state: FSMContext):
@@ -339,12 +396,14 @@ async def process_phone(message: Message, state: FSMContext):
     await message.answer("Укажите желаемые даты заезда и выезда (например, 12.10 - 15.10):")
     await state.set_state(BookingForm.dates)
 
+
 # 6. ЛОВИМ ДАТЫ -> ПЕРЕХОД К ПРИМЕЧАНИЯМ (OTHER)
 @dp.message(BookingForm.dates)
 async def process_dates(message: Message, state: FSMContext):
     await state.update_data(dates=message.text)
     await message.answer("Прошу, укажите дополнительную информацию, если необходимо (или напишите 'нет'):")
     await state.set_state(BookingForm.other)
+
 
 # 7. ФИНАЛ: ЛОВИМ ДОП. ИНФОРМАЦИЮ -> ОТПРАВКА АДМИНАМ -> СБРОС FSM
 @dp.message(BookingForm.other)
@@ -379,10 +438,13 @@ async def process_other_and_finish(message: types.Message, state: FSMContext):
 
     # 6. Гасим FSM, возвращаем юзера в обычный мир
     await state.clear()
-    
+
+
 @dp.message()
 async def echo_answer(message: types.Message):
     await message.answer(text='Простите, но я не понимаю, что вы хотите\nВернемся к началу? /start')
+
+
 @dp.errors()
 async def global_error_handler(event: types.ErrorEvent):
     print(f"⚠️ Ошибка в боте: {event.exception}")
@@ -393,10 +455,13 @@ async def global_error_handler(event: types.ErrorEvent):
     except Exception:
         pass
     return True
+
+
 # запуск бота
 async def main():
     print("Бот успешно запущен!")
     await dp.start_polling(bot)
+
 
 if __name__ == '__main__':
     asyncio.run(main())
