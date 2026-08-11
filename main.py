@@ -348,8 +348,8 @@ async def process_dates(message: Message, state: FSMContext):
 
 # 7. ФИНАЛ: ЛОВИМ ДОП. ИНФОРМАЦИЮ -> ОТПРАВКА АДМИНАМ -> СБРОС FSM
 @dp.message(BookingForm.other)
-async def process_other_and_finish(message: Message, state: FSMContext):
-    await state.update_data(other=message.text)
+async def process_other_and_finish(message: types.Message, state: FSMContext):
+    await bot.send_message(chat_id=ADMIN_CHAT_ID, text=admin_text)
 
     # Вытаскиваем всё, что насобирали
     user_data = await state.get_data()
